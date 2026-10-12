@@ -53,7 +53,7 @@ PY
       *) usage;;
     esac;;
   check)
-    for b in rtk codegraph caveman jq python3; do command -v $b >/dev/null && echo "ok   $b" || echo "MISS $b"; done
+    for b in rtk codegraph jq python3; do command -v $b >/dev/null && echo "ok   $b" || echo "MISS $b"; done; [ -d ~/.claude/skills/caveman ] && echo "ok   caveman skill" || echo "MISS caveman skill (ln -s ~/.agents/skills/caveman ~/.claude/skills/caveman)"
     [ -d "$cfg/token-dashboard" ] && echo "ok   token-dashboard" || echo "MISS token-dashboard"
     for k in JEV_API_KEY COMPOSIO_API_KEY; do /usr/bin/grep -Eq "^$k=.+" "$cfg/.env" 2>/dev/null && echo "ok   $k set" || echo "MISS $k (edit $cfg/.env)"; done;;
   *) usage;;
