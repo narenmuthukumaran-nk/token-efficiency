@@ -4,7 +4,7 @@ set -e
 self="$(python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "${BASH_SOURCE[0]}")"; here="$(cd "$(dirname "$self")/.." && pwd)"
 cfg="$HOME/.config/token-efficiency"; claude_json="$HOME/.claude.json"
 usage(){ cat <<TXT
-te init-all [dir]  run te init in every git repo under dir (default ~/Developer)
+te init-all [--yes] [dir]  list git repos under dir (default ~/Developer), ask, then te init each
 te init            install hooks + CLAUDE.md token law into the current project
 te route "brief"  Jev picks model + effort for the task, before you open the session
 te usage           today / week-to-date tokens from local transcripts
@@ -18,6 +18,7 @@ TXT
 keep_list(){ { [ -f .te/keep-mcp ] && cat .te/keep-mcp || cat "$here/config/keep-mcp.default"; } | /usr/bin/grep -v '^#' | /usr/bin/grep -v '^$'; }
 case "${1:-}" in
   init)
+    [ -e .te-skip ] && { echo ".te-skip present, not installing here"; exit 0; }
     # refresh every run: wipe old copies so stale hook/bin files never survive
     rm -rf .te/hooks .te/bin; mkdir -p .te/hooks .te/bin
     cp -f "$here/hooks/"*.sh .te/hooks/; cp -f "$here/bin/te-usage.py" .te/bin/; chmod +x .te/hooks/*.sh
@@ -38,8 +39,15 @@ PY
     [ -f .te/keep-mcp ] || cp "$here/config/keep-mcp.default" .te/keep-mcp
     command -v codegraph >/dev/null && echo "run: codegraph   (indexes this repo and wires Claude Code)" || echo "codegraph not installed, run install.sh"
     echo "te init done: .te/, .claude/settings.json hooks, CLAUDE.md token law";;
-  init-all) root="${2:-$HOME/Developer}"
-    for g in "$root"/*/.git; do [ -e "$g" ] || continue; d="$(dirname "$g")"; echo "== $d"; (cd "$d" && "$self" init >/dev/null 2>&1 && echo "   ok") || echo "   FAILED"; done;;
+  init-all) shift; yes=0; [ "${1:-}" = "--yes" ] && { yes=1; shift; }; root="${1:-$HOME/Developer}"; list=()
+    for g in "$root"/*/.git; do [ -e "$g" ] || continue; d="$(dirname "$g")"; [ -e "$d/.te-skip" ] && { echo "skip (has .te-skip): $d"; continue; }; list+=("$d"); done
+    [ ${#list[@]} -eq 0 ] && { echo "no repos found under $root"; exit 0; }
+    echo "te init will run in:"; printf '  %s\n' "${list[@]}"; echo "(add an empty .te-skip file to a repo to exclude it)"
+    if [ $yes -ne 1 ]; then
+      if read -r -p "Proceed? [y/N] " a </dev/tty 2>/dev/null; then [ "$a" = y ] || [ "$a" = Y ] || { echo "cancelled"; exit 0; }
+      else echo "not interactive: re-run with  te init-all --yes $root"; exit 0; fi
+    fi
+    for d in "${list[@]}"; do echo "== $d"; (cd "$d" && "$self" init >/dev/null 2>&1 && echo "   ok") || echo "   FAILED"; done;;
   route) shift; python3 "$here/bin/te-route.py" "$@";;
   usage) python3 "$here/bin/te-usage.py";;
   dashboard) cd "$cfg/token-dashboard" && python3 cli.py dashboard;;

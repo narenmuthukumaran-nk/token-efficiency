@@ -11,7 +11,7 @@ Stop hitting the Claude weekly limit by Monday. A guide plus a two-command setup
 curl -fsSL https://raw.githubusercontent.com/narenmuthukumaran-nk/token-efficiency/main/install.sh | bash
 ```
 
-Already have several projects? Set them all up in the same command:
+Already have several projects? This lists every git repo under the folder and asks before touching any (an empty `.te-skip` file in a repo excludes it; `te init-all --yes <dir>` skips the question):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/narenmuthukumaran-nk/token-efficiency/main/install.sh | bash -s -- --all ~/Developer
