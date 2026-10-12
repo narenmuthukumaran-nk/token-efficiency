@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # te: install the token-efficiency setup into any project, toggle MCP servers, show usage.
 set -e
-here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+self="$(python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "${BASH_SOURCE[0]}")"; here="$(cd "$(dirname "$self")/.." && pwd)"
 cfg="$HOME/.config/token-efficiency"; claude_json="$HOME/.claude.json"
 usage(){ cat <<TXT
 te init            install hooks + CLAUDE.md token law into the current project
@@ -16,8 +16,7 @@ TXT
 keep_list(){ { [ -f .te/keep-mcp ] && cat .te/keep-mcp || cat "$here/config/keep-mcp.default"; } | /usr/bin/grep -v '^#' | /usr/bin/grep -v '^$'; }
 case "${1:-}" in
   init)
-    mkdir -p .te/hooks; cp "$here/hooks/"*.sh .te/hooks/; cp "$here/bin/te-usage.py" .te/hooks/../te-usage.py 2>/dev/null || true
-    mkdir -p .te/bin; cp "$here/bin/te-usage.py" .te/bin/; chmod +x .te/hooks/*.sh
+    mkdir -p .te/hooks; cp "$here/hooks/"*.sh .te/hooks/;     mkdir -p .te/bin; cp "$here/bin/te-usage.py" .te/bin/; chmod +x .te/hooks/*.sh
     sed -i '' 's#\$root/bin/te-usage.py#$root/bin/te-usage.py#' .te/hooks/session_start.sh
     mkdir -p .claude
     if [ -f .claude/settings.json ]; then
