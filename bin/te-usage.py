@@ -36,4 +36,22 @@ def k(n): return f"{n/1000:.0f}k" if n<1e6 else f"{n/1e6:.2f}M"
 s=f"tokens today {k(tot['today'])}, week-to-date {k(tot['week'])} (uncached input+output+cache writes)"
 if budget:
     s+=f" | {tot['week']*100//budget}% of weekly budget, daily target 15% = {k(budget*15//100)}"
+# automation detector: many sessions sharing one first prompt in the last 24h means a hook or cron is spawning claude -p
+import collections
+cut=dt.datetime.now().timestamp()-86400; firsts=collections.Counter(); n=0
+for f in glob.glob(f"{home}/.claude/projects/*/*.jsonl"):
+    if os.path.getmtime(f)<cut: continue
+    n+=1
+    try:
+        with open(f,errors="ignore") as fh:
+            for line in fh:
+                if '"type":"user"' in line or '"type": "user"' in line:
+                    c=json.loads(line).get("message",{}).get("content")
+                    t=c if isinstance(c,str) else " ".join(x.get("text","") for x in c if isinstance(x,dict))
+                    firsts[t.strip()[:60]]+=1; break
+    except Exception: pass
+if firsts:
+    top,cnt=firsts.most_common(1)[0]
+    if cnt>=20: s+=f" | WARNING: {cnt} sessions in 24h share one prompt ({top[:40]}...). Something is spawning claude -p. Check hooks, cron, launchd."
+s+=f" | sessions last 24h: {n}"
 print(s)
