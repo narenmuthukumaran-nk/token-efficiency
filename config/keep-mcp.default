@@ -1,0 +1,3 @@
+# One local MCP server name per line that `te mcp slim` keeps. Everything else is parked
+# (backed up, restorable with `te mcp full`). Override per project in <project>/.te/keep-mcp
+XcodeBuildMCP

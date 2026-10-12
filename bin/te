@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# te: install the token-efficiency setup into any project, toggle MCP servers, show usage.
+set -e
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cfg="$HOME/.config/token-efficiency"; claude_json="$HOME/.claude.json"
+usage(){ cat <<TXT
+te init            install hooks + CLAUDE.md token law into the current project
+te usage           today / week-to-date tokens from local transcripts
+te dashboard       open token-dashboard (local web UI)
+te mcp status      list local MCP servers and which are kept
+te mcp slim        keep only the keep-list (backup saved), restore with 'te mcp full'
+te mcp full        restore every local MCP server
+te check           verify rtk, codegraph, caveman, token-dashboard, keys
+TXT
+}
+keep_list(){ { [ -f .te/keep-mcp ] && cat .te/keep-mcp || cat "$here/config/keep-mcp.default"; } | /usr/bin/grep -v '^#' | /usr/bin/grep -v '^$'; }
+case "${1:-}" in
+  init)
+    mkdir -p .te/hooks; cp "$here/hooks/"*.sh .te/hooks/; cp "$here/bin/te-usage.py" .te/hooks/../te-usage.py 2>/dev/null || true
+    mkdir -p .te/bin; cp "$here/bin/te-usage.py" .te/bin/; chmod +x .te/hooks/*.sh
+    sed -i '' 's#\$root/bin/te-usage.py#$root/bin/te-usage.py#' .te/hooks/session_start.sh
+    mkdir -p .claude
+    if [ -f .claude/settings.json ]; then
+      python3 - "$here/claude/settings.hooks.json" <<'PY'
+import json,sys
+add=json.load(open(sys.argv[1])); p=".claude/settings.json"; cur=json.load(open(p))
+cur.setdefault("hooks",{})
+for ev,arr in add["hooks"].items():
+    cur["hooks"].setdefault(ev,[])
+    if not any(json.dumps(a,sort_keys=True)==json.dumps(x,sort_keys=True) for x in cur["hooks"][ev] for a in arr):
+        cur["hooks"][ev]+=arr
+json.dump(cur,open(p,"w"),indent=2)
+PY
+    else cp "$here/claude/settings.hooks.json" .claude/settings.json; fi
+    /usr/bin/grep -q 'Token law (token-efficiency)' CLAUDE.md 2>/dev/null || cat "$here/claude/CLAUDE.snippet.md" >> CLAUDE.md
+    [ -f .te/keep-mcp ] || cp "$here/config/keep-mcp.default" .te/keep-mcp
+    command -v codegraph >/dev/null && echo "run: codegraph   (indexes this repo and wires Claude Code)" || echo "codegraph not installed, run install.sh"
+    echo "te init done: .te/, .claude/settings.json hooks, CLAUDE.md token law";;
+  usage) python3 "$here/bin/te-usage.py";;
+  dashboard) cd "$cfg/token-dashboard" && python3 cli.py dashboard;;
+  mcp)
+    case "${2:-status}" in
+      status) echo "keep-list:"; keep_list | sed 's/^/  /'; echo "configured:"; jq -r '.mcpServers // {} | keys[]' "$claude_json" | sed 's/^/  /'
+              [ -f "$cfg/mcp-full.json" ] && echo "state: SLIM (backup present, 'te mcp full' restores)" || echo "state: FULL"
+              echo "note: claude.ai connectors (Gmail, Notion, Figma...) are toggled in the desktop app > Connectors, not here";;
+      slim) [ -f "$cfg/mcp-full.json" ] && { echo "already slim"; exit 0; }
+            mkdir -p "$cfg"; jq '.mcpServers // {}' "$claude_json" > "$cfg/mcp-full.json"
+            keep=$(keep_list | jq -R . | jq -s .)
+            jq --argjson k "$keep" '.mcpServers = ((.mcpServers // {}) | with_entries(select(.key as $n | $k | index($n))))' "$claude_json" > "$claude_json.tmp" && mv "$claude_json.tmp" "$claude_json"
+            echo "slim: kept $(keep_list | tr '\n' ' '). Restart Claude Code to apply.";;
+      full) [ -f "$cfg/mcp-full.json" ] || { echo "already full"; exit 0; }
+            jq --slurpfile s "$cfg/mcp-full.json" '.mcpServers = $s[0]' "$claude_json" > "$claude_json.tmp" && mv "$claude_json.tmp" "$claude_json"
+            rm "$cfg/mcp-full.json"; echo "full: all local MCP servers restored. Restart Claude Code.";;
+      *) usage;;
+    esac;;
+  check)
+    for b in rtk codegraph caveman jq python3; do command -v $b >/dev/null && echo "ok   $b" || echo "MISS $b"; done
+    [ -d "$cfg/token-dashboard" ] && echo "ok   token-dashboard" || echo "MISS token-dashboard"
+    for k in JEV_API_KEY COMPOSIO_API_KEY; do /usr/bin/grep -Eq "^$k=.+" "$cfg/.env" 2>/dev/null && echo "ok   $k set" || echo "MISS $k (edit $cfg/.env)"; done;;
+  *) usage;;
+esac

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Blocks any commit that looks like it carries a secret.
+pat='(sk-[A-Za-z0-9]{16,}|eyJ[A-Za-z0-9_-]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY|(API_KEY|SECRET|TOKEN|PASSWORD)=[^ \n]{12,}|supabase\.co/.*key|ghp_[A-Za-z0-9]{20,})'
+if git diff --cached -U0 | /usr/bin/grep -E '^\+' | /usr/bin/grep -Eq "$pat"; then
+  echo "pre-commit: possible secret in staged diff. Commit blocked." >&2
+  git diff --cached -U0 | /usr/bin/grep -E '^\+' | /usr/bin/grep -En "$pat" | cut -c1-120 >&2
+  exit 1
+fi

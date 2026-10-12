@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.te/hooks/session_start.sh" } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.te/hooks/prompt_guard.sh" } ] }
+    ]
+  }
+}
