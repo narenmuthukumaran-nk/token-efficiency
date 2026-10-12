@@ -1,6 +1,6 @@
 ---
 name: interview-me
-description: Before planning or coding a vague task, interview the user until the four-part brief (job, why, guardrails, done-means) is complete, then write it to a file. Use when NK says "interview me", gives a half-formed idea, or starts a big task with unknowns.
+description: Before planning or coding a vague task, interview the user until the four-part brief (job, why, guardrails, done-means) is complete, then write it to a file. Use when the user says "interview me", gives a half-formed idea, or starts a big task with unknowns.
 ---
 
 # interview-me
