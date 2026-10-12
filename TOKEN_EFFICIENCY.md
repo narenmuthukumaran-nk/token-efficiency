@@ -135,3 +135,13 @@ Source: code.claude.com/docs/en/prompt-caching and /costs. Every point below is 
 - LSP needs `xcode-build-server` to generate buildServer.json plus a fresh index in build/sim before it can compete. Not worth it for "who calls" today.
 - Codegraph wins on speed, cross-file answers and tests. LSP would only add exact type-aware go-to-definition, which Xcode already gives NK.
 - Decision: keep codegraph as the structure tool. Cap its output with the codegraph_gate.sh hook so it fires only on real code-structure prompts.
+
+## 11. Bulk tasks and big builds
+
+- Route by ambiguity and risk, never by size. A large feature with a clear brief and a design system is Sonnet work. A 10-line change in a locked algorithm is Fable work.
+- UI quality comes from the design system, a reference screenshot and a review pass, not from the model. Opus decides layout and flow once; Sonnet builds the screens.
+- Flow for a dump of tasks: one Opus session writes the task list (interview-me or prompt-master), then `te route --batch tasks.md` labels every task with model and effort in one Jev call, grouped into batches.
+- One batch = one fresh session with model and effort set once. High effort only for the first prompt of an ambiguous batch, then low. Nothing switches effort per task mid-session; there is no API for it and the gain is nil.
+- Run batches sequentially: Haiku, Sonnet, then the one or two Fable items alone. Sub-agents only for verbose or parallel work inside a batch (tests, logs, independent screens).
+- No Fable or Opus orchestrator spawning many sub-agents: the orchestrator idles at the most expensive rate, every sub-agent starts cold on a 5-minute cache, and failures are invisible to it.
+- Keep a 3-column log (task, model, rework needed). After two weeks the data decides the ladder, not opinion.

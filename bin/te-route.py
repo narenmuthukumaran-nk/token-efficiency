@@ -8,7 +8,27 @@ for line in open(os.path.expanduser("~/.config/token-efficiency/.env")):
     if "=" in line and not line.startswith("#"):
         k, v = line.strip().split("=", 1); env[k] = v
 key = env.get("JEV_API_KEY") or sys.exit("JEV_API_KEY missing in ~/.config/token-efficiency/.env")
-brief = " ".join(sys.argv[1:]) or sys.stdin.read()
+args=sys.argv[1:]
+if args and args[0]=="--batch":
+    # te route --batch tasks.md : one Jev call per task line, grouped output (model, effort) for session batching
+    lines=[l.strip(" -*\t") for l in open(args[1]) if l.strip() and not l.startswith("#")]
+    groups={}
+    for t in lines:
+        body={"state":t,"model":"jev-latest","questions":{
+          "model":{"type":"choice","instructions":"Which Claude model should run this coding task? Cheapest that does it well. Risk and ambiguity matter, size does not.",
+            "criteria":{"haiku":"search, logs, docs, renames, mechanical edits","sonnet":"implement from a clear brief, tests, review, UI screens with a design system","opus":"unclear scope, architecture, cross-module debugging, writing the brief","fable":"locked or security-critical algorithm, crash with no clear cause, go-live audit"}},
+          "effort":{"type":"choice","instructions":"Reasoning effort for this task","criteria":{"low":"mechanical, well specified","medium":"normal","high":"ambiguous or risky"}}}}
+        rq=urllib.request.Request("https://api.typesafe.ai/v1/systemone",data=json.dumps(body).encode(),headers={"Authorization":f"Bearer {key}","Content-Type":"application/json"})
+        try: a=json.load(urllib.request.urlopen(rq,timeout=20))["answers"]
+        except Exception as e: sys.exit(f"jev call failed: {e}")
+        mo=max(a["model"]["probabilities"],key=a["model"]["probabilities"].get); ef=max(a["effort"]["probabilities"],key=a["effort"]["probabilities"].get)
+        groups.setdefault((mo,ef),[]).append(t)
+    order={"haiku":0,"sonnet":1,"opus":2,"fable":3}; eo={"low":0,"medium":1,"high":2}
+    for (mo,ef),ts in sorted(groups.items(),key=lambda k:(order[k[0][0]],eo[k[0][1]])):
+        print(f"\n## batch: {mo} / effort {ef}  ({len(ts)} tasks)  -> one fresh session: claude --model {mo}, /effort {ef}")
+        for t in ts: print(f"- {t}")
+    sys.exit(0)
+brief = " ".join(args) or sys.stdin.read()
 body = {
   "state": brief, "model": "jev-latest",
   "questions": {
