@@ -8,3 +8,6 @@
 - Reply tersely: lists, paths, commands. No restating the question, no closing summary of a summary.
 - Screenshots only as final proof.
 - Before any work: read the SessionStart checklist the hook printed and flag any violated habit to the user first.
+
+# Compact instructions
+When compacting, keep: the task brief (job / why / guardrails / done), files changed with paths, open bugs, decisions taken, next step. Drop tool output, logs, and exploration.

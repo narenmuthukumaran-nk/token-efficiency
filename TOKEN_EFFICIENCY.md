@@ -95,3 +95,36 @@ Put these in CLAUDE.md or a SessionStart hook so the agent warns you before it s
 - no booster words in the prompt
 - no pasted document over ~200 lines
 - usage share for today not exceeded
+
+## 9. What Anthropic's own caching docs say (Claude Code, Oct 2026)
+
+Source: code.claude.com/docs/en/prompt-caching and /costs. Every point below is from those pages.
+
+| Fact | What it means for you |
+|---|---|
+| Each model has its own cache. `/model` mid-session re-reads the whole history uncached. | Pick the model before prompt 1. The `pre_model_switch.sh` hook blocks accidental switches. Avoid `opusplan`: every plan-mode toggle is a model switch. |
+| Changing effort keeps the cache on Opus 5.5, Sonnet 5.5, Haiku 5.5, Fable 5.1 (Claude Code 2.1.260+). | Use `/effort` freely. Prompt 1 high, iterations low. |
+| Turning fast mode on changes the model. | Decide fast mode at session start. |
+| Cache lifetime: 1 hour on a subscription within plan usage, 5 minutes on usage credits or API key. Every hit resets the timer. | Do not pause more than an hour. If you did, `/clear` or resume from summary instead of continuing the big session. |
+| Sub-agent and compaction requests get the 5-minute TTL by default. | Keep sub-agent tasks short and self-contained. `subagentPromptCacheTtl` can raise it, at 2x write cost. |
+| Compaction invalidates the conversation layer and costs the most after a break. | `/compact` at a natural break while the cache is warm, never right after returning. |
+| MCP tools are deferred, so connecting or removing a server mid-session does not disturb the cache. | Toggle MCP between sessions anyway, but a mid-session toggle is not a disaster. |
+| Cache is scoped to machine + directory. Parallel sessions in the same directory share the cached prefix. Sequential sessions share it only if the git status snapshot matches. | Parallel sessions in one repo are cheaper than they look. Still, each carries its own conversation. |
+| Editing CLAUDE.md mid-session neither invalidates the cache nor applies. | CLAUDE.md edits take effect next session. |
+| Removing old images reprocesses the conversation from that point. | Screenshots are expensive twice: once to send, once when they get evicted. |
+| Idle sessions still spend: scheduled tasks, cross-session messages, goal check-ins each send the full context. | Close idle sessions. Do not broadcast messages to every running session. |
+| Prompt suggestions send one extra request after every reply. | Turn them off in `/config`. |
+| Extended thinking is output tokens, tens of thousands per turn at default. | Lower effort for simple tasks. |
+| Hooks can pre-filter output before Claude sees it. CLI tools (`gh`, `xcodebuild | grep`) cost less than MCP servers. | rtk and the PreToolUse pattern are the official recommendation. |
+| Code intelligence plugins (Swift, TypeScript, Python, Rust) give go-to-definition instead of grep. | Official alternative or complement to codegraph for Swift. |
+| Move workflow instructions from CLAUDE.md into skills. | CLAUDE.md is paid for on every session; skills load on demand. |
+
+## 10. Improvements we adopted from that
+
+1. `pre_model_switch.sh` hook: blocks a mid-session model switch, tells you to use `/effort` or `/clear`.
+2. Compact instructions block in CLAUDE.md so `/compact` keeps the brief, paths, decisions and next step only.
+3. Rule: `/compact` at task boundaries while warm, never after a break.
+4. Rule: close idle sessions, no broadcast messages between sessions.
+5. Prompt suggestions off.
+6. Sub-agents get short, self-contained briefs because their cache is 5 minutes.
+7. Next: Swift code-intelligence plugin trial next to codegraph, and move the long CLAUDE.md sections into skills.

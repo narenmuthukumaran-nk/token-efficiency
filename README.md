@@ -26,7 +26,7 @@ te init
 | [codegraph](https://github.com/colbymchenry/codegraph) | Local code graph, auto-syncs; the model queries a node instead of grepping |
 | [caveman](https://github.com/JuliusBrussee/caveman) | Terse replies, ~65% fewer output tokens |
 | [token-dashboard](https://github.com/nateherkai/token-dashboard) | Local analytics on where your tokens go |
-| `te init` | SessionStart hook (habit checklist + today's usage) and UserPromptSubmit hook (warns on booster words, pasted docs, mid-task model switch), plus a token law block in CLAUDE.md |
+| `te init` | SessionStart hook (habit checklist + today's usage), UserPromptSubmit hook (warns on booster words, pasted docs), PreModelSwitch hook (blocks mid-session model switch, the cache killer), plus a token law and compact-instructions block in CLAUDE.md |
 | `te mcp slim / full` | Park every local MCP server except a keep-list, restore any time |
 | `te usage` | Today and week-to-date tokens, percentage if `TE_WEEKLY_TOKEN_BUDGET` is set |
 
