@@ -5,18 +5,20 @@ Stop hitting the Claude weekly limit by Monday. A guide plus a two-command setup
 - [TOKEN_EFFICIENCY.md](TOKEN_EFFICIENCY.md): why you run out, the model ladder, habits, the weekly budget.
 - [JEV_USE_CASES.md](JEV_USE_CASES.md): where a small cheap model (Jev) takes the repeating jobs.
 
-## Install (macOS / Linux)
+## Install (macOS / Linux), one command
 
 ```bash
-git clone https://github.com/narenmuthukumaran-nk/token-efficiency.git ~/token-efficiency
-~/token-efficiency/install.sh
+curl -fsSL https://raw.githubusercontent.com/narenmuthukumaran-nk/token-efficiency/main/install.sh | bash
 ```
 
-Then in any project:
+Already have several projects? Set them all up in the same command:
 
 ```bash
-te init
+curl -fsSL https://raw.githubusercontent.com/narenmuthukumaran-nk/token-efficiency/main/install.sh | bash -s -- --all ~/Developer
 ```
+
+Or one project at a time: `cd <project> && te init`. Re-running is safe; it refreshes the hook files.
+See your numbers: `te usage` (terminal) or `te dashboard` (local web page).
 
 ## What you get
 

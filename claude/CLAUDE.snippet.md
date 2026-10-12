@@ -1,7 +1,7 @@
 
 ## Token law (token-efficiency)
-- On prompt 1 the hook gives a JEV ROUTING line (model + effort). Compare with yourself. If different and set_session_model exists, switch now (nothing is cached yet) and set effort; otherwise tell NK in one line to reopen on that model. Never switch after prompt 1. Change effort instead.
-- A JEV BATCH PLAN means NK pasted a task list: do only the batch matching your model, write the rest to tasks-remaining.md, name the sessions to open.
+- On prompt 1 the hook gives a JEV ROUTING line (model + effort). Compare with yourself. If different and set_session_model exists, switch now (nothing is cached yet) and set effort; otherwise tell the user in one line to reopen on that model. Never switch after prompt 1. Change effort instead.
+- A JEV BATCH PLAN means the user pasted a task list: do only the batch matching your model, write the rest to tasks-remaining.md, name the sessions to open.
 - Sub-agents: Haiku for search, logs, docs. Sonnet for implementation and review. Never Fable.
 - One task per session. Compact at phase boundaries. Stop before 450k context.
 - Never paste build or test output raw. Run through `rtk` or `| tail -40 > /tmp/log.txt` and read the file.

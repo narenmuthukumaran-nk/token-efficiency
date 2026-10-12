@@ -15,10 +15,10 @@ if [ "$first" = 1 ] && [ ${#prompt} -gt 40 ]; then
   if [ "$tasks" -ge 3 ]; then
     tmp=$(mktemp); printf '%s\n' "$prompt" | /usr/bin/grep -E '^\s*([-*]|[0-9]+[.)])\s+\S' | sed -E 's/^\s*([-*]|[0-9]+[.)])\s+//' > "$tmp"
     route=$(python3 "$root/bin/te-route.py" --batch "$tmp" 2>/dev/null); rm -f "$tmp"
-    [ -n "$route" ] && ctx+=("JEV BATCH PLAN for this task list (one fresh session per batch, do only the batch that matches your model, write the rest to tasks-remaining.md and tell NK which sessions to open):$route")
+    [ -n "$route" ] && ctx+=("JEV BATCH PLAN for this task list (one fresh session per batch, do only the batch that matches your model, write the rest to tasks-remaining.md and tell the user which sessions to open):$route")
   else
     route=$(python3 "$root/bin/te-route.py" "$prompt" 2>/dev/null | head -3 | tr '\n' ' ')
-    [ -n "$route" ] && ctx+=("JEV ROUTING for this task: $route. If the model differs from you: this is prompt 1, nothing is cached yet, so switch now with set_session_model and set_session_effort if those tools exist, else tell NK in ONE line to reopen on that model. If it matches, set the effort and start.")
+    [ -n "$route" ] && ctx+=("JEV ROUTING for this task: $route. If the model differs from you: this is prompt 1, nothing is cached yet, so switch now with set_session_model and set_session_effort if those tools exist, else tell the user in ONE line to reopen on that model. If it matches, set the effort and start.")
   fi
 fi
 lines=$(printf '%s\n' "$prompt" | wc -l | tr -d ' ')
@@ -28,7 +28,7 @@ printf '%s' "$prompt" | /usr/bin/grep -Eiq 'double[- ]check|verify (it )?twice|t
 python3 - "$(printf '%s\n' "${warn[@]}")" "$(printf '%s\n' "${ctx[@]}")" <<'PY'
 import json,sys
 w,c=sys.argv[1].strip(),sys.argv[2].strip()
-out={"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":(("token-efficiency warnings: "+w+"\nFlag these to NK in one line.\n") if w else "")+c}}
+out={"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":(("token-efficiency warnings: "+w+"\nFlag these to the user in one line.\n") if w else "")+c}}
 if w: out["systemMessage"]="token-efficiency: "+w
 print(json.dumps(out))
 PY

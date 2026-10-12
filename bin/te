@@ -4,6 +4,7 @@ set -e
 self="$(python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "${BASH_SOURCE[0]}")"; here="$(cd "$(dirname "$self")/.." && pwd)"
 cfg="$HOME/.config/token-efficiency"; claude_json="$HOME/.claude.json"
 usage(){ cat <<TXT
+te init-all [dir]  run te init in every git repo under dir (default ~/Developer)
 te init            install hooks + CLAUDE.md token law into the current project
 te route "brief"  Jev picks model + effort for the task, before you open the session
 te usage           today / week-to-date tokens from local transcripts
@@ -37,6 +38,8 @@ PY
     [ -f .te/keep-mcp ] || cp "$here/config/keep-mcp.default" .te/keep-mcp
     command -v codegraph >/dev/null && echo "run: codegraph   (indexes this repo and wires Claude Code)" || echo "codegraph not installed, run install.sh"
     echo "te init done: .te/, .claude/settings.json hooks, CLAUDE.md token law";;
+  init-all) root="${2:-$HOME/Developer}"
+    for g in "$root"/*/.git; do [ -e "$g" ] || continue; d="$(dirname "$g")"; echo "== $d"; (cd "$d" && "$self" init >/dev/null 2>&1 && echo "   ok") || echo "   FAILED"; done;;
   route) shift; python3 "$here/bin/te-route.py" "$@";;
   usage) python3 "$here/bin/te-usage.py";;
   dashboard) cd "$cfg/token-dashboard" && python3 cli.py dashboard;;

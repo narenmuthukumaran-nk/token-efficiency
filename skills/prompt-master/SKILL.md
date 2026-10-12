@@ -1,6 +1,6 @@
 ---
 name: prompt-master
-description: Turn a voice dump or rambling message into the four-part brief (job, why, guardrails, done-means), ready to paste into a fresh session. Use when NK pastes a long unstructured dump, says "clean this up", or "make this a prompt".
+description: Turn a voice dump or rambling message into the four-part brief (job, why, guardrails, done-means), ready to paste into a fresh session. Use when the user pastes a long unstructured dump, says "clean this up", or "make this a prompt".
 ---
 
 # prompt-master
@@ -14,7 +14,7 @@ Input: a messy dump (voice transcript, stream of thought). Output: one tight bri
    - **Why**: the stated reason or pain. If none, write "not stated".
    - **Guardrails**: every "don't", "never", "only", "keep" in the dump, plus known project laws.
    - **Done-means**: any "it works when" signal, turned into a checkable item. If none stated, propose one and mark it "(proposed)".
-3. Keep NK's own words for names, paths and numbers. Never invent facts.
+3. Keep the user's own words for names, paths and numbers. Never invent facts.
 4. Anything unclear goes under "Open questions" at the end, max 3 lines.
 5. If a part is "not stated" and matters, say so and suggest running `interview-me`.
 
