@@ -8,7 +8,7 @@ src="${BASH_SOURCE[0]:-$0}"
 if [ ! -f "$(dirname "$src")/bin/te" ]; then
   dest="$HOME/.token-efficiency"
   if [ -d "$dest/.git" ]; then git -C "$dest" pull -q --ff-only; else git clone -q "$REPO_URL" "$dest"; fi
-  exec bash "$dest/install.sh" "$@"
+  exec bash "$dest/install.sh" "$@" </dev/null
 fi
 cfg="$HOME/.config/token-efficiency"; mkdir -p "$cfg"; chmod 700 "$cfg"
 [ -f "$cfg/.env" ] || { printf 'JEV_API_KEY=\nCOMPOSIO_API_KEY=\nTE_WEEKLY_TOKEN_BUDGET=\n' > "$cfg/.env"; chmod 600 "$cfg/.env"; }
@@ -19,7 +19,7 @@ echo "[2/5] codegraph (local code knowledge graph)"
 command -v codegraph >/dev/null || curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
 echo "  per project: run 'codegraph' once inside the repo"
 echo "[3/5] caveman (terse replies skill)"
-command -v npx >/dev/null && npx -y skills add JuliusBrussee/caveman -g || echo "  needs node: npm i -g @caveman-ai/cli && caveman setup --install"
+command -v npx >/dev/null && npx -y skills add JuliusBrussee/caveman -g -y --agent claude-code </dev/null || echo "  needs node: npm i -g @caveman-ai/cli && caveman setup --install"
 mkdir -p ~/.claude/skills; for s in caveman caveman-compress caveman-commit; do [ -e ~/.claude/skills/$s ] || ln -s ~/.agents/skills/$s ~/.claude/skills/$s 2>/dev/null; done; echo "  caveman linked into ~/.claude/skills"
 echo "[4/5] token-dashboard (local usage analytics)"
 [ -d "$cfg/token-dashboard" ] && git -C "$cfg/token-dashboard" pull -q || git clone -q https://github.com/nateherkai/token-dashboard.git "$cfg/token-dashboard"
