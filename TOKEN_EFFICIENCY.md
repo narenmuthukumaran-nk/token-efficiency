@@ -128,3 +128,10 @@ Source: code.claude.com/docs/en/prompt-caching and /costs. Every point below is 
 5. Prompt suggestions off.
 6. Sub-agents get short, self-contained briefs because their cache is 5 minutes.
 7. Next: Swift code-intelligence plugin trial next to codegraph, and move the long CLAUDE.md sections into skills.
+
+## Swift code-intelligence trial (2026-10-12, timebank-production)
+- Question: "who calls BudgetSessionEngine". Codegraph: 0.8 s, 54 callers across 14+ files, plus test files and blast radius, about 25 KB (~6k tokens) of output.
+- sourcekit-lsp (the swift-lsp plugin engine) via `textDocument/references`: 10 s, 0 references. The repo is an .xcodeproj with no Package.swift or buildServer.json, so it cannot see across files.
+- LSP needs `xcode-build-server` to generate buildServer.json plus a fresh index in build/sim before it can compete. Not worth it for "who calls" today.
+- Codegraph wins on speed, cross-file answers and tests. LSP would only add exact type-aware go-to-definition, which Xcode already gives NK.
+- Decision: keep codegraph as the structure tool. Cap its output with the codegraph_gate.sh hook so it fires only on real code-structure prompts.

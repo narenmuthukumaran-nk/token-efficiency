@@ -15,6 +15,8 @@ mkdir -p ~/.claude/skills; for s in caveman caveman-compress caveman-commit; do 
 echo "[4/5] token-dashboard (local usage analytics)"
 [ -d "$cfg/token-dashboard" ] && git -C "$cfg/token-dashboard" pull -q || git clone -q https://github.com/nateherkai/token-dashboard.git "$cfg/token-dashboard"
 python3 "$cfg/token-dashboard/cli.py" scan >/dev/null 2>&1 && echo "  scanned local transcripts" || echo "  run: python3 $cfg/token-dashboard/cli.py scan"
+mkdir -p ~/.claude/skills; for s in interview-me prompt-master; do ln -sfn "$(cd "$(dirname "$0")" && pwd)/skills/$s" ~/.claude/skills/$s; done; echo "  interview-me + prompt-master skills linked"
+cp "$(cd "$(dirname "$0")" && pwd)/hooks/codegraph_gate.sh" "$cfg/codegraph_gate.sh"; echo "  codegraph gate copied (wire it in settings.json UserPromptSubmit)"
 echo "[5/5] te command"
 here="$(cd "$(dirname "$0")" && pwd)"; mkdir -p "$HOME/.local/bin"; ln -sf "$here/bin/te" "$HOME/.local/bin/te"
 echo "  add to PATH if missing: export PATH=\"\$HOME/.local/bin:\$PATH\""

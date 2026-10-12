@@ -16,7 +16,7 @@ _wr=env.get("TE_WEEK_RESET","Mon 00:00").split(); _wd=["Mon","Tue","Wed","Thu","
 _ws=dt.datetime.combine(today-dt.timedelta(days=(today.weekday()-_wd)%7),dt.time(_hh,_mm)).astimezone()
 if _ws>now: _ws-=dt.timedelta(days=7)
 week_start=_ws.date()
-tot={"today":0,"week":0}; seen=set()
+tot={"today":0,"week":0}; seen=set(); bymodel={}; latest=(0,None)
 for f in glob.glob(f"{home}/.claude/projects/*/*.jsonl"):
     if dt.date.fromtimestamp(os.path.getmtime(f))<week_start: continue
     try:
@@ -33,7 +33,13 @@ for f in glob.glob(f"{home}/.claude/projects/*/*.jsonl"):
             ts=o.get("timestamp")
             try: d=dt.datetime.fromisoformat(ts.replace("Z","+00:00")).astimezone().date()
             except Exception: continue
-            if d>=week_start: tot["week"]+=n
+            if d>=week_start:
+                tot["week"]+=n
+                mm=bymodel.setdefault(m.get("model") or "unknown",{"in":0,"out":0,"cw":0,"cr":0})
+                mm["in"]+=u.get("input_tokens",0); mm["out"]+=u.get("output_tokens",0); mm["cw"]+=u.get("cache_creation_input_tokens",0); mm["cr"]+=u.get("cache_read_input_tokens",0)
+                try: t=dt.datetime.fromisoformat(ts.replace("Z","+00:00")).timestamp()
+                except Exception: t=0
+                if t>latest[0]: latest=(t,u)
             if d==today: tot["today"]+=n
     except Exception: continue
 def k(n): return f"{n/1000:.0f}k" if n<1e6 else f"{n/1e6:.2f}M"
@@ -59,3 +65,13 @@ if firsts:
     if cnt>=20: s+=f" | WARNING: {cnt} sessions in 24h share one prompt ({top[:40]}...). Something is spawning claude -p. Check hooks, cron, launchd."
 s+=f" | sessions last 24h: {n}"
 print(s)
+
+# per-model lines, then cache state of the latest turn
+for mod,v in sorted(bymodel.items(), key=lambda x:-(x[1]["in"]+x[1]["out"]+x[1]["cw"])):
+    tn=v["in"]+v["out"]+v["cw"]
+    print(f"  {mod:<28} {k(tn):>7}" + (f"  {tn*100//budget}% of budget" if budget else "") + f"  (in {k(v['in'])}, out {k(v['out'])}, cache-write {k(v['cw'])}, cache-read {k(v['cr'])})")
+if latest[1]:
+    u=latest[1]; age=(now.timestamp()-latest[0])/60
+    rd=u.get("cache_read_input_tokens",0); wr=u.get("cache_creation_input_tokens",0)
+    state="WARM" if rd>wr and age<60 else "COLD"
+    print(f"  cache latest turn: {state} (read {k(rd)}, write {k(wr)}, {age:.0f} min ago)")
