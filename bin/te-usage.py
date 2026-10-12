@@ -11,7 +11,11 @@ try:
 except FileNotFoundError: pass
 budget=int(env.get("TE_WEEKLY_TOKEN_BUDGET","0") or 0)
 now=dt.datetime.now().astimezone(); today=now.date()
-week_start=today-dt.timedelta(days=today.weekday())
+# week reset: TE_WEEK_RESET="Sat 13:30" in .env (your plan's reset time). Default Monday 00:00.
+_wr=env.get("TE_WEEK_RESET","Mon 00:00").split(); _wd=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].index(_wr[0][:3]); _hh,_mm=map(int,_wr[1].split(":"))
+_ws=dt.datetime.combine(today-dt.timedelta(days=(today.weekday()-_wd)%7),dt.time(_hh,_mm)).astimezone()
+if _ws>now: _ws-=dt.timedelta(days=7)
+week_start=_ws.date()
 tot={"today":0,"week":0}; seen=set()
 for f in glob.glob(f"{home}/.claude/projects/*/*.jsonl"):
     if dt.date.fromtimestamp(os.path.getmtime(f))<week_start: continue

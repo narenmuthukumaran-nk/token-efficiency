@@ -28,7 +28,8 @@ te init
 | [token-dashboard](https://github.com/nateherkai/token-dashboard) | Local analytics on where your tokens go |
 | `te init` | SessionStart hook (habit checklist + today's usage), UserPromptSubmit hook (warns on booster words, pasted docs), PreModelSwitch hook (blocks mid-session model switch, the cache killer), plus a token law and compact-instructions block in CLAUDE.md |
 | `te mcp slim / full` | Park every local MCP server except a keep-list, restore any time |
-| `te usage` | Today and week-to-date tokens, percentage if `TE_WEEKLY_TOKEN_BUDGET` is set |
+| `te route "brief"` | Jev (TypeSafe System One) picks model + effort for the task before you open the session, about 600 tokens, no Claude usage |
+| `te usage` | Today and week-to-date tokens (week reset via `TE_WEEK_RESET`), percentage if `TE_WEEKLY_TOKEN_BUDGET` is set |
 
 ## Keys
 

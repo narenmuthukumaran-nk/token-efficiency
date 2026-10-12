@@ -5,6 +5,7 @@ self="$(python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "${BASH_
 cfg="$HOME/.config/token-efficiency"; claude_json="$HOME/.claude.json"
 usage(){ cat <<TXT
 te init            install hooks + CLAUDE.md token law into the current project
+te route "brief"  Jev picks model + effort for the task, before you open the session
 te usage           today / week-to-date tokens from local transcripts
 te dashboard       open token-dashboard (local web UI)
 te mcp status      list local MCP servers and which are kept
@@ -35,6 +36,7 @@ PY
     [ -f .te/keep-mcp ] || cp "$here/config/keep-mcp.default" .te/keep-mcp
     command -v codegraph >/dev/null && echo "run: codegraph   (indexes this repo and wires Claude Code)" || echo "codegraph not installed, run install.sh"
     echo "te init done: .te/, .claude/settings.json hooks, CLAUDE.md token law";;
+  route) shift; python3 "$here/bin/te-route.py" "$@";;
   usage) python3 "$here/bin/te-usage.py";;
   dashboard) cd "$cfg/token-dashboard" && python3 cli.py dashboard;;
   mcp)
