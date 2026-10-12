@@ -4,8 +4,9 @@
 #    and tells Claude to compare with itself and fix it before working. Multi-line task dumps get batched.
 # 2) Every prompt: warns on booster words and long pastes.
 input=$(cat)
-read -r prompt transcript < <(printf '%s' "$input" | python3 -c 'import sys,json;o=json.load(sys.stdin);print(json.dumps(o.get("prompt","")),o.get("transcript_path",""))' 2>/dev/null)
-prompt=$(printf '%s' "$prompt" | python3 -c 'import sys,json;print(json.loads(sys.stdin.read()))')
+ptmp=$(mktemp)
+transcript=$(printf '%s' "$input" | python3 -c 'import sys,json;o=json.load(sys.stdin);open(sys.argv[1],"w").write(o.get("prompt",""));print(o.get("transcript_path",""))' "$ptmp" 2>/dev/null)
+prompt=$(cat "$ptmp"); rm -f "$ptmp"
 root="$(cd "$(dirname "$0")/.." && pwd)"
 warn=(); ctx=()
 first=0; { [ -z "$transcript" ] || [ ! -s "$transcript" ] || ! /usr/bin/grep -q '"type":"assistant"' "$transcript"; } && first=1
